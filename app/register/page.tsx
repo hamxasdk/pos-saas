@@ -2,19 +2,32 @@
 
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema, type RegisterFormData } from "@/lib/validations/auth-schemas";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-    const [formData, setFormData] = useState({
-        fullName: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        rememberMe: false,
+    const { login } = useAuth();
+    const router = useRouter();
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<RegisterFormData>({
+        resolver: zodResolver(registerSchema),
+        defaultValues: {
+            fullName: "",
+            email: "",
+            password: "",
+            confirmPassword: "",
+        },
     });
 
     const mutation = useMutation({
-        mutationFn: async (data: typeof formData) => {
+        mutationFn: async (data: RegisterFormData) => {
             // Mock API call
             return new Promise((resolve) => {
                 setTimeout(() => {
@@ -23,26 +36,15 @@ export default function RegisterPage() {
                 }, 1000);
             });
         },
-        onSuccess: () => {
-            alert("Registration successful! (Mock)");
+        onSuccess: (_, variables) => {
+            // Login user and redirect to dashboard after successful registration
+            login(variables.email, variables.fullName);
+            router.push("/dashboard");
         },
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (formData.password !== formData.confirmPassword) {
-            alert("Passwords do not match!");
-            return;
-        }
-        mutation.mutate(formData);
-    };
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type, checked } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value,
-        }));
+    const onSubmit = async (data: RegisterFormData) => {
+        mutation.mutate(data);
     };
 
     return (
@@ -185,20 +187,25 @@ export default function RegisterPage() {
                     </div>
 
                     {/* Register Form */}
-                    <form className="space-y-5" onSubmit={handleSubmit}>
+                    <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
                         <div>
                             <label className="block text-sm font-semibold leading-6 text-gray-900 dark:text-gray-200 mb-2">
                                 Full Name
                             </label>
                             <input
                                 type="text"
-                                name="fullName"
-                                value={formData.fullName}
-                                onChange={handleChange}
                                 placeholder="e.g. John Doe"
-                                className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all"
-                                required
+                                {...register("fullName")}
+                                className={`block w-full rounded-lg border ${errors.fullName
+                                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                                    : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                                    } px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all`}
                             />
+                            {errors.fullName && (
+                                <p className="mt-1 text-sm text-red-500">
+                                    {errors.fullName.message}
+                                </p>
+                            )}
                         </div>
                         <div>
                             <label className="block text-sm font-semibold leading-6 text-gray-900 dark:text-gray-200 mb-2">
@@ -206,13 +213,18 @@ export default function RegisterPage() {
                             </label>
                             <input
                                 type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
                                 placeholder="e.g. admin@store.com"
-                                className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all"
-                                required
+                                {...register("email")}
+                                className={`block w-full rounded-lg border ${errors.email
+                                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                                    : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                                    } px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all`}
                             />
+                            {errors.email && (
+                                <p className="mt-1 text-sm text-red-500">
+                                    {errors.email.message}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -222,12 +234,12 @@ export default function RegisterPage() {
                             <div className="relative flex items-center">
                                 <input
                                     type="password"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
                                     placeholder="••••••••"
-                                    className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all pr-12"
-                                    required
+                                    {...register("password")}
+                                    className={`block w-full rounded-lg border ${errors.password
+                                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                                        : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                                        } px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all pr-12`}
                                 />
                                 <button
                                     type="button"
@@ -236,6 +248,11 @@ export default function RegisterPage() {
                                     <span className="material-symbols-outlined">visibility</span>
                                 </button>
                             </div>
+                            {errors.password && (
+                                <p className="mt-1 text-sm text-red-500">
+                                    {errors.password.message}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -245,12 +262,12 @@ export default function RegisterPage() {
                             <div className="relative flex items-center">
                                 <input
                                     type="password"
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
                                     placeholder="••••••••"
-                                    className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all pr-12"
-                                    required
+                                    {...register("confirmPassword")}
+                                    className={`block w-full rounded-lg border ${errors.confirmPassword
+                                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                                        : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                                        } px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all pr-12`}
                                 />
                                 <button
                                     type="button"
@@ -259,14 +276,19 @@ export default function RegisterPage() {
                                     <span className="material-symbols-outlined">visibility</span>
                                 </button>
                             </div>
+                            {errors.confirmPassword && (
+                                <p className="mt-1 text-sm text-red-500">
+                                    {errors.confirmPassword.message}
+                                </p>
+                            )}
                         </div>
 
                         <button
                             type="submit"
-                            disabled={mutation.isPending}
+                            disabled={isSubmitting || mutation.isPending}
                             className="flex w-full items-center justify-center rounded-lg bg-primary px-4 py-4 text-base font-bold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {mutation.isPending ? "Creating Account..." : "Sign Up"}
+                            {isSubmitting || mutation.isPending ? "Creating Account..." : "Sign Up"}
                         </button>
                     </form>
 

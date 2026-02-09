@@ -2,8 +2,42 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, type LoginFormData } from "@/lib/validations/auth-schemas";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+    const { login } = useAuth();
+    const router = useRouter();
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<LoginFormData>({
+        resolver: zodResolver(loginSchema),
+        defaultValues: {
+            emailOrUsername: "",
+            password: "",
+            rememberMe: false,
+        },
+    });
+
+    const onSubmit = async (data: LoginFormData) => {
+        // Mock API call - replace with actual authentication logic
+        console.log("Login data:", data);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Extract name from email (temporary until we have real user data)
+        const name = data.emailOrUsername.split("@")[0] || data.emailOrUsername;
+
+        // Login user and redirect to dashboard
+        login(data.emailOrUsername, name);
+        router.push("/dashboard");
+    };
+
     return (
         <div className="flex min-h-screen w-full flex-col lg:flex-row font-display bg-background-light dark:bg-background-dark text-foreground">
             {/* Left Side: Hero Image (Hidden on small screens) */}
@@ -144,7 +178,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Login Form */}
-                    <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                    <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
                         <div>
                             <label className="block text-sm font-semibold leading-6 text-gray-900 dark:text-gray-200 mb-2">
                                 Email or Username
@@ -152,8 +186,17 @@ export default function LoginPage() {
                             <input
                                 type="text"
                                 placeholder="e.g. admin@store.com"
-                                className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all"
+                                {...register("emailOrUsername")}
+                                className={`block w-full rounded-lg border ${errors.emailOrUsername
+                                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                                    : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                                    } px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all`}
                             />
+                            {errors.emailOrUsername && (
+                                <p className="mt-1 text-sm text-red-500">
+                                    {errors.emailOrUsername.message}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -164,7 +207,11 @@ export default function LoginPage() {
                                 <input
                                     type="password"
                                     placeholder="••••••••"
-                                    className="block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all pr-12"
+                                    {...register("password")}
+                                    className={`block w-full rounded-lg border ${errors.password
+                                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                                        : "border-gray-300 focus:border-primary focus:ring-primary/20"
+                                        } px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 dark:border-gray-700 dark:bg-background-dark dark:text-white h-14 transition-all pr-12`}
                                 />
                                 <button
                                     type="button"
@@ -173,14 +220,19 @@ export default function LoginPage() {
                                     <span className="material-symbols-outlined">visibility</span>
                                 </button>
                             </div>
+                            {errors.password && (
+                                <p className="mt-1 text-sm text-red-500">
+                                    {errors.password.message}
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex items-center justify-between">
                             <div className="flex items-center">
                                 <input
                                     id="remember-me"
-                                    name="remember-me"
                                     type="checkbox"
+                                    {...register("rememberMe")}
                                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-700 dark:bg-background-dark"
                                 />
                                 <label
@@ -202,9 +254,10 @@ export default function LoginPage() {
 
                         <button
                             type="submit"
-                            className="flex w-full items-center justify-center rounded-lg bg-primary px-4 py-4 text-base font-bold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all cursor-pointer"
+                            disabled={isSubmitting}
+                            className="flex w-full items-center justify-center rounded-lg bg-primary px-4 py-4 text-base font-bold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Sign In
+                            {isSubmitting ? "Signing In..." : "Sign In"}
                         </button>
                     </form>
 
