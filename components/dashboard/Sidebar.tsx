@@ -1,8 +1,41 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Sidebar() {
+    const pathname = usePathname();
+
+    const isActive = (path: string) => pathname === path;
+
+    const navItems = [
+        {
+            name: "Dashboard",
+            href: "/dashboard",
+            icon: "dashboard",
+        },
+        {
+            name: "Sales",
+            href: "/dashboard/sales",
+            icon: "receipt_long",
+        },
+        {
+            name: "Inventory",
+            href: "/dashboard/inventory",
+            icon: "inventory_2",
+        },
+        {
+            name: "Customers",
+            href: "/dashboard/customers",
+            icon: "group",
+        },
+        {
+            name: "Reports",
+            href: "/dashboard/reports",
+            icon: "bar_chart",
+        },
+    ];
+
     return (
         <aside className="w-64 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 hidden lg:flex flex-col h-full font-display">
             <div className="p-6 flex items-center gap-3">
@@ -19,49 +52,34 @@ export default function Sidebar() {
                 </div>
             </div>
             <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-                <Link
-                    href="#"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary group"
-                >
-                    <span className="material-symbols-outlined">dashboard</span>
-                    <span className="font-semibold text-sm">Dashboard</span>
-                </Link>
-                <Link
-                    href="#"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                    <span className="material-symbols-outlined">receipt_long</span>
-                    <span className="font-medium text-sm">Sales</span>
-                </Link>
-                <Link
-                    href="#"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                    <span className="material-symbols-outlined">inventory_2</span>
-                    <span className="font-medium text-sm">Inventory</span>
-                </Link>
-                <Link
-                    href="#"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                    <span className="material-symbols-outlined">group</span>
-                    <span className="font-medium text-sm">Customers</span>
-                </Link>
-                <Link
-                    href="#"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                    <span className="material-symbols-outlined">bar_chart</span>
-                    <span className="font-medium text-sm">Reports</span>
-                </Link>
+                {navItems.map((item) => (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive(item.href)
+                                ? "bg-primary/10 text-primary"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            }`}
+                    >
+                        <span className="material-symbols-outlined">{item.icon}</span>
+                        <span className={`font-medium text-sm ${isActive(item.href) ? "font-semibold" : ""}`}>
+                            {item.name}
+                        </span>
+                    </Link>
+                ))}
             </nav>
             <div className="p-4 border-t border-slate-200 dark:border-slate-800">
                 <Link
-                    href="#"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors mb-2"
+                    href="/dashboard/settings"
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mb-2 ${isActive("/dashboard/settings")
+                            ? "bg-primary/10 text-primary"
+                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        }`}
                 >
                     <span className="material-symbols-outlined">settings</span>
-                    <span className="font-medium text-sm">Settings</span>
+                    <span className={`font-medium text-sm ${isActive("/dashboard/settings") ? "font-semibold" : ""}`}>
+                        Settings
+                    </span>
                 </Link>
                 <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
                     <div
@@ -82,3 +100,4 @@ export default function Sidebar() {
         </aside>
     );
 }
+
